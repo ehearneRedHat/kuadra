@@ -1,0 +1,5 @@
+## Append samples of your project ##
+resources:
+- kuadra_v1_awsaccount.yaml
+- kuadra_v1_user.yaml
+#+kubebuilder:scaffold:manifestskustomizesamples

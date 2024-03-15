@@ -1,15 +1,82 @@
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  labels:
-    app.kubernetes.io/name: clusterrole
-    app.kubernetes.io/instance: manager-role
-    app.kubernetes.io/component: rbac
-    app.kubernetes.io/created-by: kuadra
-    app.kubernetes.io/part-of: kuadra
-    app.kubernetes.io/managed-by: kustomize
   name: manager-role
 rules:
-- apiGroups: [""]
-  resources: ["pods"]
-  verbs: ["get", "list", "watch"]
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kuadra.kuadrant.io
+  resources:
+  - awsaccounts
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kuadra.kuadrant.io
+  resources:
+  - awsaccounts/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - kuadra.kuadrant.io
+  resources:
+  - awsaccounts/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - kuadra.kuadrant.io
+  resources:
+  - users
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kuadra.kuadrant.io
+  resources:
+  - users/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - kuadra.kuadrant.io
+  resources:
+  - users/status
+  verbs:
+  - get
+  - patch
+  - update

@@ -1,0 +1,16 @@
+apiVersion: kuadra.kuadrant.io/v1
+kind: AwsAccount
+metadata:
+  labels:
+    app.kubernetes.io/name: awsaccount
+    app.kubernetes.io/instance: awsaccount-sample
+    app.kubernetes.io/part-of: kuadra
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: kuadra
+  name: awsaccount-sample
+spec:
+  userName: <insert name here>
+  groups:
+    - dns-management
+    - test-group
+  # TODO(user): Add fields here

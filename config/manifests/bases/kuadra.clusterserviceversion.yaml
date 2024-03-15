@@ -1,0 +1,52 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: '[]'
+    capabilities: Basic Install
+  name: kuadra.v0.0.0
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - description: AwsAccount is the Schema for the awsaccounts API
+      displayName: Aws Account
+      kind: AwsAccount
+      name: awsaccounts.kuadra.kuadrant.io
+      version: v1
+    - description: User is the Schema for the users API
+      displayName: User
+      kind: User
+      name: users.kuadra.kuadrant.io
+      version: v1
+  description: kuadra
+  displayName: kuadra
+  icon:
+  - base64data: ""
+    mediatype: ""
+  install:
+    spec:
+      deployments: null
+    strategy: ""
+  installModes:
+  - supported: false
+    type: OwnNamespace
+  - supported: false
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  keywords:
+  - kuadra
+  links:
+  - name: Kuadra
+    url: https://kuadra.domain
+  maintainers:
+  - email: ehearne@redhat.com
+    name: evan
+  maturity: alpha
+  provider:
+    name: kuadra
+  version: 0.0.0

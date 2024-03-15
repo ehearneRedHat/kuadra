@@ -1,0 +1,27 @@
+# permissions for end users to view awsaccounts.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: awsaccount-viewer-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: kuadra
+    app.kubernetes.io/part-of: kuadra
+    app.kubernetes.io/managed-by: kustomize
+  name: awsaccount-viewer-role
+rules:
+- apiGroups:
+  - kuadra.kuadrant.io
+  resources:
+  - awsaccounts
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - kuadra.kuadrant.io
+  resources:
+  - awsaccounts/status
+  verbs:
+  - get

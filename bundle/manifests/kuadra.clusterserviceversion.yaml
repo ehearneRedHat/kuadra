@@ -1,0 +1,365 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: |-
+      [
+        {
+          "apiVersion": "kuadra.kuadrant.io/v1",
+          "kind": "AwsAccount",
+          "metadata": {
+            "labels": {
+              "app.kubernetes.io/created-by": "kuadra",
+              "app.kubernetes.io/instance": "awsaccount-sample",
+              "app.kubernetes.io/managed-by": "kustomize",
+              "app.kubernetes.io/name": "awsaccount",
+              "app.kubernetes.io/part-of": "kuadra"
+            },
+            "name": "awsaccount-sample"
+          },
+          "spec": {
+            "groups": [
+              "dns-management",
+              "test-group"
+            ],
+            "userName": "\u003cinsert name here\u003e"
+          }
+        },
+        {
+          "apiVersion": "kuadra.kuadrant.io/v1",
+          "kind": "User",
+          "metadata": {
+            "labels": {
+              "app.kubernetes.io/created-by": "kuadra",
+              "app.kubernetes.io/instance": "user-sample",
+              "app.kubernetes.io/managed-by": "kustomize",
+              "app.kubernetes.io/name": "user",
+              "app.kubernetes.io/part-of": "kuadra"
+            },
+            "name": "user-sample"
+          },
+          "spec": {
+            "awsAccount": {
+              "spec": {
+                "user": {
+                  "groups": [
+                    "dns-management"
+                  ],
+                  "userName": "\u003cinsert name here\u003e"
+                }
+              }
+            }
+          }
+        }
+      ]
+    capabilities: Basic Install
+    createdAt: "2024-03-15T15:17:48Z"
+    operators.operatorframework.io/builder: operator-sdk-v1.33.0+git
+    operators.operatorframework.io/project_layout: go.kubebuilder.io/v4
+  name: kuadra.v0.0.1
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - description: AwsAccount is the Schema for the awsaccounts API
+      displayName: Aws Account
+      kind: AwsAccount
+      name: awsaccounts.kuadra.kuadrant.io
+      version: v1
+    - description: User is the Schema for the users API
+      displayName: User
+      kind: User
+      name: users.kuadra.kuadrant.io
+      version: v1
+  description: kuadra
+  displayName: kuadra
+  icon:
+  - base64data: ""
+    mediatype: ""
+  install:
+    spec:
+      clusterPermissions:
+      - rules:
+        - apiGroups:
+          - ""
+          resources:
+          - namespaces
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - ""
+          resources:
+          - secrets
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - kuadra.kuadrant.io
+          resources:
+          - awsaccounts
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - kuadra.kuadrant.io
+          resources:
+          - awsaccounts/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - kuadra.kuadrant.io
+          resources:
+          - awsaccounts/status
+          verbs:
+          - get
+          - patch
+          - update
+        - apiGroups:
+          - kuadra.kuadrant.io
+          resources:
+          - users
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - kuadra.kuadrant.io
+          resources:
+          - users/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - kuadra.kuadrant.io
+          resources:
+          - users/status
+          verbs:
+          - get
+          - patch
+          - update
+        - apiGroups:
+          - authentication.k8s.io
+          resources:
+          - tokenreviews
+          verbs:
+          - create
+        - apiGroups:
+          - authorization.k8s.io
+          resources:
+          - subjectaccessreviews
+          verbs:
+          - create
+        serviceAccountName: kuadra-controller-manager
+      deployments:
+      - label:
+          app.kubernetes.io/component: manager
+          app.kubernetes.io/created-by: kuadra
+          app.kubernetes.io/instance: controller-manager
+          app.kubernetes.io/managed-by: kustomize
+          app.kubernetes.io/name: deployment
+          app.kubernetes.io/part-of: kuadra
+          control-plane: controller-manager
+        name: kuadra-controller-manager
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              control-plane: controller-manager
+          strategy: {}
+          template:
+            metadata:
+              annotations:
+                kubectl.kubernetes.io/default-container: manager
+              labels:
+                control-plane: controller-manager
+            spec:
+              containers:
+              - args:
+                - --health-probe-bind-address=:8081
+                - --metrics-bind-address=127.0.0.1:8080
+                - --leader-elect
+                command:
+                - /manager
+                image: controller:latest
+                livenessProbe:
+                  httpGet:
+                    path: /healthz
+                    port: 8081
+                  initialDelaySeconds: 15
+                  periodSeconds: 20
+                name: manager
+                ports:
+                - containerPort: 9443
+                  name: webhook-server
+                  protocol: TCP
+                readinessProbe:
+                  httpGet:
+                    path: /readyz
+                    port: 8081
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
+                resources:
+                  limits:
+                    cpu: 500m
+                    memory: 128Mi
+                  requests:
+                    cpu: 10m
+                    memory: 64Mi
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  capabilities:
+                    drop:
+                    - ALL
+                volumeMounts:
+                - mountPath: /tmp/k8s-webhook-server/serving-certs
+                  name: cert
+                  readOnly: true
+              - args:
+                - --secure-listen-address=0.0.0.0:8443
+                - --upstream=http://127.0.0.1:8080/
+                - --logtostderr=true
+                - --v=0
+                image: gcr.io/kubebuilder/kube-rbac-proxy:v0.15.0
+                name: kube-rbac-proxy
+                ports:
+                - containerPort: 8443
+                  name: https
+                  protocol: TCP
+                resources:
+                  limits:
+                    cpu: 500m
+                    memory: 128Mi
+                  requests:
+                    cpu: 5m
+                    memory: 64Mi
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  capabilities:
+                    drop:
+                    - ALL
+              securityContext:
+                runAsNonRoot: true
+              serviceAccountName: kuadra-controller-manager
+              terminationGracePeriodSeconds: 10
+              volumes:
+              - name: cert
+                secret:
+                  defaultMode: 420
+                  secretName: webhook-server-cert
+      permissions:
+      - rules:
+        - apiGroups:
+          - ""
+          resources:
+          - configmaps
+          verbs:
+          - get
+          - list
+          - watch
+          - create
+          - update
+          - patch
+          - delete
+        - apiGroups:
+          - coordination.k8s.io
+          resources:
+          - leases
+          verbs:
+          - get
+          - list
+          - watch
+          - create
+          - update
+          - patch
+          - delete
+        - apiGroups:
+          - ""
+          resources:
+          - events
+          verbs:
+          - create
+          - patch
+        serviceAccountName: kuadra-controller-manager
+    strategy: deployment
+  installModes:
+  - supported: false
+    type: OwnNamespace
+  - supported: false
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  keywords:
+  - kuadra
+  links:
+  - name: Kuadra
+    url: https://kuadra.domain
+  maintainers:
+  - email: ehearne@redhat.com
+    name: evan
+  maturity: alpha
+  provider:
+    name: kuadra
+  version: 0.0.1
+  webhookdefinitions:
+  - admissionReviewVersions:
+    - v1
+    containerPort: 443
+    deploymentName: kuadra-controller-manager
+    failurePolicy: Fail
+    generateName: mawsaccount.kb.io
+    rules:
+    - apiGroups:
+      - kuadra.kuadrant.io
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - awsaccounts
+    sideEffects: None
+    targetPort: 9443
+    type: MutatingAdmissionWebhook
+    webhookPath: /mutate-kuadra-kuadrant-io-v1-awsaccount
+  - admissionReviewVersions:
+    - v1
+    containerPort: 443
+    deploymentName: kuadra-controller-manager
+    failurePolicy: Fail
+    generateName: vawsaccount.kb.io
+    rules:
+    - apiGroups:
+      - kuadra.kuadrant.io
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - awsaccounts
+    sideEffects: None
+    targetPort: 9443
+    type: ValidatingAdmissionWebhook
+    webhookPath: /validate-kuadra-kuadrant-io-v1-awsaccount

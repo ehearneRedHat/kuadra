@@ -24,7 +24,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/kuadrant/kuadra/test/utils"
+	"github.com/Kuadrant/kuadra/test/utils"
 )
 
 const namespace = "kuadra-system"

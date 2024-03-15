@@ -2,12 +2,35 @@
 # This file is used to track the info used to scaffold your project
 # and allow the plugins properly work.
 # More info: https://book.kubebuilder.io/reference/project-config.html
-domain: kuadra.kuadrant.io
+domain: kuadrant.io
 layout:
 - go.kubebuilder.io/v4
 plugins:
   manifests.sdk.operatorframework.io/v2: {}
   scorecard.sdk.operatorframework.io/v2: {}
 projectName: kuadra
-repo: github.com/kuadrant/kuadra
+repo: github.com/Kuadrant/kuadra
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: kuadrant.io
+  group: kuadra
+  kind: AwsAccount
+  path: github.com/Kuadrant/kuadra/api/v1
+  version: v1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: kuadrant.io
+  group: kuadra
+  kind: User
+  path: github.com/Kuadrant/kuadra/api/v1
+  version: v1
 version: "3"
