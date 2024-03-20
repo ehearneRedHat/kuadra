@@ -33,4 +33,13 @@ resources:
   kind: User
   path: github.com/Kuadrant/kuadra/api/v1
   version: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: kuadrant.io
+  group: kuadra
+  kind: Route53
+  path: github.com/Kuadrant/kuadra/api/v1
+  version: v1
 version: "3"

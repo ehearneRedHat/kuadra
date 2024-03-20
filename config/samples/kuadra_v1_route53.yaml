@@ -1,0 +1,12 @@
+apiVersion: kuadra.kuadrant.io/v1
+kind: Route53
+metadata:
+  labels:
+    app.kubernetes.io/name: route53
+    app.kubernetes.io/instance: route53-sample
+    app.kubernetes.io/part-of: kuadra
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: kuadra
+  name: route53-sample
+spec:
+  # TODO(user): Add fields here

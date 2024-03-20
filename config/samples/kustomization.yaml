@@ -2,4 +2,5 @@
 resources:
 - kuadra_v1_awsaccount.yaml
 - kuadra_v1_user.yaml
+- kuadra_v1_route53.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples
