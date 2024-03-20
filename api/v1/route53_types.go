@@ -20,22 +20,23 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // Route53Spec defines the desired state of Route53
 type Route53Spec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+	// There are two fields required to generate an AWS Route 53 Hosted Zone - #1 the domain name (string), and #2 the type of hosted zone (boolean), either public (true) or private (false).
 	// Important: Run "make" to regenerate code after modifying this file
-
-	// Foo is an example field of Route53. Edit route53_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	DomainName         string `json:"domainName"`
+	IsPublicHostedZone bool   `json:"isPublicHostedZone"`
 }
 
 // Route53Status defines the observed state of Route53
 type Route53Status struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
+	// There are two fields required when creating a hosted zone - #1 whether the creation of a subdomain was a success and #2 the namespace records within that subdomain.
 	// Important: Run "make" to regenerate code after modifying this file
+
+	// +optional
+	HostedZoneCreated bool `json:"hostedZoneCreated"`
+	// +optional
+	NamespaceRecords []string `json:"namespaceRecords"`
 }
 
 //+kubebuilder:object:root=true
