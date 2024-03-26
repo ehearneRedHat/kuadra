@@ -25,14 +25,18 @@ type IamWrapper interface {
 }
 
 type Route53Wrapper interface {
-	// Checks to see if root domain exists for given sub domain.
-	IsExistingRootDomain(ctx context.Context, subDomain string) (bool, error)
-	// Gives us the delegation set after creation of hosted zone, which contains the nameserver entries to add to the root domain.
-	CreateHostedZone(ctx context.Context, name string, isPublicHostedZone bool) (route53Types.DelegationSet, error)
+	// Checks to see if domain exists.
+	IsExistingDomain(ctx context.Context, domain string) (bool, error)
+	// Gives us the delegation set after creation of hosted zone, which contains the nameserver entries to add to a domain.
+	CreateHostedZone(ctx context.Context, name string, isPublicHostedZone bool) error
 	// Adds the nameservers to the root domain if root domain exists for given subdomain.
-	AddNameserversToRootDomain(ctx context.Context, nameservers []string) error
+	AddNameserverRecordsToDomain(ctx context.Context, nameservers []string) error
+	// Get Delegation Set for given hosted zone.
+	GetDelegationSet(ctx context.Context, hostedZoneName string) (route53Types.DelegationSet, error)
+	// Lists the nameservers for a given hosted zone.
+	ListNameservers(ctx context.Context, hostedZoneName string) ([]string, error)
 	// Deletes the hosted zone by domain name.
-	DeleteHostedZone(ctx context.Context, name string) error
-	// Deletes the associated nameservers of the given domain from the root domain.
-	DeleteNameserversFromRootDomain(ctx context.Context, name string) error
+	DeleteHostedZone(ctx context.Context, hostedZoneName string) error
+	// Deletes the nameserver record of the hosted zone.
+	DeleteNameserverRecordFromHostedZone(ctx context.Context, hostedZoneName string, nameservers []string) error
 }
