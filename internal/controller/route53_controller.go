@@ -30,7 +30,8 @@ import (
 // Route53Reconciler reconciles a Route53 object
 type Route53Reconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme         *runtime.Scheme
+	Route53Wrapper Route53Wrapper
 }
 
 //+kubebuilder:rbac:groups=kuadra.kuadrant.io,resources=route53s,verbs=get;list;watch;create;update;patch;delete
@@ -47,9 +48,36 @@ type Route53Reconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.15.0/pkg/reconcile
 func (r *Route53Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	log := log.FromContext(ctx)
 
-	// TODO(user): your logic here
+	var route53 kuadrav1.Route53
+
+	// Pull in the CR sample to perform CRUD actions against
+	err := r.Get(ctx, req.NamespacedName, &route53)
+
+	if err != nil {
+		log.Error(err, "error getting route53 CR")
+	}
+	// Create Hosted Zone
+	if !route53.Status.HostedZoneCreated {
+		var err error
+		// if root domain was specified in the CR sample...
+		if route53.Spec.RootDomainName != "" {
+			err = r.Route53Wrapper.CreateHostedZoneRootDomain(ctx, route53.Spec.DomainName, route53.Spec.RootDomainName, route53.Spec.IsPrivateHostedZone)
+		} else { // if root domain was not specified in the CR sample...
+			err = r.Route53Wrapper.CreateHostedZone(ctx, route53.Spec.DomainName, route53.Spec.IsPrivateHostedZone)
+		}
+		// If there were issues creating the hosted zone...
+		if err != nil {
+			log.Error(err, "unable to create hosted zone")
+			return ctrl.Result{}, err
+		}
+		// Log the creation of the Hosted Zone
+		log.V(1).Info("created hosted zone", "domainName", route53.Spec.DomainName)
+		// Mark the hosted zone as created in the spec
+		route53.Status.HostedZoneCreated = true
+	}
+	// Delete Hosted Zone
 
 	return ctrl.Result{}, nil
 }
