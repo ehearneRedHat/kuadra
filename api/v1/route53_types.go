@@ -24,8 +24,10 @@ import (
 type Route53Spec struct {
 	// There are two fields required to generate an AWS Route 53 Hosted Zone - #1 the domain name (string), and #2 the type of hosted zone (boolean), either public (true) or private (false).
 	// Important: Run "make" to regenerate code after modifying this file
-	DomainName         string `json:"domainName"`
-	IsPublicHostedZone bool   `json:"isPublicHostedZone"`
+	DomainName          string `json:"domainName"`
+	IsPrivateHostedZone bool   `json:"isPrivateHostedZone"`
+	// +optional
+	RootDomainName string `json:"rootDomainName"`
 }
 
 // Route53Status defines the observed state of Route53
@@ -36,7 +38,7 @@ type Route53Status struct {
 	// +optional
 	HostedZoneCreated bool `json:"hostedZoneCreated"`
 	// +optional
-	NamespaceRecords []string `json:"namespaceRecords"`
+	NameserverRecords []string `json:"nameserverRecords"`
 }
 
 //+kubebuilder:object:root=true
