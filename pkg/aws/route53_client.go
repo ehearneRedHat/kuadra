@@ -2,13 +2,12 @@ package aws
 
 import (
 	"context"
-	"fmt"
-	"log"
-	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	"github.com/aws/aws-sdk-go-v2/service/route53/types"
+	"github.com/emicklei/go-restful/v3/log"
 )
 
 type route53Wrapper struct {
@@ -27,103 +26,144 @@ func NewRoute53Wrapper() (*route53Wrapper, error) {
 	return &route53Wrapper, nil
 }
 
-// Meaning of potential return options...
-// false, nil --> no root domain exists for given subdomain.
-// true, nil --> root domain exists for given subdomain.
-// false, err --> root domain was given as parameter, unsuccessful query for hosted zones in AWS.
-func (wrapper route53Wrapper) IsExistingRootDomain(ctx context.Context, subDomain string) (bool, error) {
-	// Check to see if subdomain given is not a root domain
-	parts := strings.Split(subDomain, ".")
-
-	len_parts := len(parts)
-
-	if len_parts <= 2 {
-		log.Printf("Given subdomain %v is a root domain. A subdomain looks like something.example.com, and a root domain looks like example.com.", subDomain)
-		return false, fmt.Errorf("root domain given")
-	}
-
-	// If passes check, proceed on...
-
-	// Creates a root domain using the last two parts of the split string.
-	rootDomain := parts[len_parts-2] + "." + parts[len_parts-1]
-
-	// Create an array of hosted zones from route53 query.
-
-	hostedZones, err := wrapper.Route53Client.ListHostedZones(ctx, &route53.ListHostedZonesInput{})
-
-	// Check to see if request was successful
+// Checks to see if domain exists.
+func (route53Wrapper route53Wrapper) IsExistingDomain(ctx context.Context, domain string) (bool, error) {
+	// Grab list of existing hosted zones
+	hostedZonesList, err := route53Wrapper.Route53Client.ListHostedZones(ctx, &route53.ListHostedZonesInput{})
 	if err != nil {
-		log.Printf("Request was unsuccessful. %v", err)
+		log.Printf("Failed to grab hosted zones from AWS. Here's why: %v", err)
 		return false, err
 	}
-
-	// If passes check, proceed on...
-
-	// zoom in on list of hosted zones.
-	hostedZonesList := hostedZones.HostedZones
-
-	// Iterate through list of hosted zones and compare domain names for match with root domain
-	for _, hostedZone := range hostedZonesList {
-		if hostedZone.Name == &rootDomain {
+	// Sort list of hosted zones to contain just the hosted zone name.
+	hostedZoneNameList := hostedZonesList.HostedZones
+	// Check to see if domain exists in list of hosted zones.
+	for _, hostedZone := range hostedZoneNameList {
+		if *hostedZone.Name == domain+"." {
 			return true, nil
 		}
 	}
-
-	// No existing root domain found for given subdomain
+	// No match found
 	return false, nil
 }
 
-func (wrapper route53Wrapper) CreateHostedZone(ctx context.Context, name string, isPublicHostedZone bool) (types.DelegationSet, error) {
-	// Check to see if subdomain given is not a root domain
-	parts := strings.Split(name, ".")
+// Creates a hosted zone.
 
-	len_parts := len(parts)
-
-	// Create hosted zone config from domain.
-	hostedZoneConfig := types.HostedZoneConfig{
-		PrivateZone: !isPublicHostedZone, // must negate the value as struct was set up with public hosted zone in mind.
+func (route53Wrapper route53Wrapper) CreateHostedZone(ctx context.Context, name string, isPrivateHostedZone bool) error {
+	// Check to see if hosted zone exists
+	isExistingDomain, err := route53Wrapper.IsExistingDomain(ctx, name)
+	if isExistingDomain {
+		log.Printf("Hosted Zone %v already exists.", name)
+		return nil
 	}
-	hostedZoneInput := route53.CreateHostedZoneInput{
-		Name:             &name,
-		HostedZoneConfig: &hostedZoneConfig,
-	}
-
-	subdomain := name
-
-	// if root domain...
-	if len_parts <= 2 {
-		// Create subdomain to check for existing root domain since root domain.
-		subdomain = "example" + "." + name
-	}
-
-	rootDomainExists, err := wrapper.IsExistingRootDomain(ctx, subdomain)
-
-	if rootDomainExists || err != nil {
-		log.Printf("Given domain %v exists in route 53 already. %v", name, err)
-		return types.DelegationSet{}, err
-	}
-
-	log.Printf("Given subdomain %v is a root domain. Creating Hosted Zone.", name)
-
-	// if sub domain...
-
-	route53Output, err := wrapper.Route53Client.CreateHostedZone(ctx, &hostedZoneInput)
 
 	if err != nil {
-		log.Printf("Failed to create hosted zone %v. Here's why: %v", name, err)
+		return err
 	}
 
-	return *route53Output.DelegationSet, nil
+	// Continue if no errors...
+
+	// Create unique string (time)
+
+	timeNow := time.Now().Format("2006-01-02 15:04:05")
+
+	// Create Hosted Zone
+	_, err = route53Wrapper.Route53Client.CreateHostedZone(ctx, &route53.CreateHostedZoneInput{
+		CallerReference: &timeNow,
+		Name:            &name,
+		HostedZoneConfig: &types.HostedZoneConfig{
+			PrivateZone: isPrivateHostedZone,
+		},
+	})
+
+	if err != nil {
+		return err
+	}
+
+	// Everything went well... *STUPENDOUS* :0
+	return nil
+
 }
 
-func AddNameserversToRootDomain(ctx context.Context, nameservers []string) error {
+// Creates a hosted zone and attaches its nameserver records to a given root domain.
+func (route53Wrapper route53Wrapper) CreateHostedZoneRootDomain(ctx context.Context, name string, rootDomain string, isPrivateHostedZone bool) error {
+	// Check to see if hosted zone exists
+	isExistingDomain, err := route53Wrapper.IsExistingDomain(ctx, name)
+	if isExistingDomain {
+		log.Printf("Hosted Zone %v already exists.", name)
+		return nil
+	}
+
+	if err != nil {
+		return err
+	}
+
+	// Check to see if root hosted zone exists
+	isExistingDomain, err = route53Wrapper.IsExistingDomain(ctx, rootDomain)
+	if !isExistingDomain {
+		log.Printf("Hosted Zone %v does not exist. Creating root domain.", rootDomain)
+		// Create unique string (time)
+		timeNow := time.Now().Format("2006-01-02 15:04:05")
+		// Create Hosted Zone
+		_, err1 := route53Wrapper.Route53Client.CreateHostedZone(ctx, &route53.CreateHostedZoneInput{
+			CallerReference: &timeNow,
+			Name:            &rootDomain,
+			HostedZoneConfig: &types.HostedZoneConfig{
+				PrivateZone: isPrivateHostedZone,
+			},
+		})
+		if err1 != nil {
+			return err1
+		}
+	}
+
+	if err != nil {
+		return err
+	}
+
+	// Continue on if hosted zone does not exist and the root hosted zone exists
+
+	// Create unique string (time)
+
+	timeNow := time.Now().Format("2006-01-02 15:04:05")
+
+	// Create Hosted Zone
+	_, err = route53Wrapper.Route53Client.CreateHostedZone(ctx, &route53.CreateHostedZoneInput{
+		CallerReference: &timeNow,
+		Name:            &name,
+		HostedZoneConfig: &types.HostedZoneConfig{
+			PrivateZone: isPrivateHostedZone,
+		},
+	})
+
+	if err != nil {
+		return err
+	}
+
+	// Everything went well... *NOICE* :D
 	return nil
 }
 
-func DeleteHostedZone(ctx context.Context, name string) error {
+// Adds the nameservers to the root domain if root domain exists for given subdomain.
+func (route53Wrapper route53Wrapper) AddNameserverRecordsToDomain(ctx context.Context, domain string, nameservers []string) error {
 	return nil
 }
 
-func DeleteNameserversFromRootDomain(ctx context.Context, name string) error {
+// Get Delegation Set for given hosted zone.
+func (route53Wrapper route53Wrapper) GetDelegationSet(ctx context.Context, hostedZoneName string) (types.DelegationSet, error) {
+	return types.DelegationSet{}, nil
+}
+
+// Lists the nameservers for a given hosted zone.
+func (route53Wrapper route53Wrapper) ListNameservers(ctx context.Context, hostedZoneName string) ([]string, error) {
+	return []string{}, nil
+}
+
+// Deletes the hosted zone by domain name.
+func (route53Wrapper route53Wrapper) DeleteHostedZone(ctx context.Context, hostedZoneName string) error {
+	return nil
+}
+
+// Deletes the nameserver record of the hosted zone.
+func (route53Wrapper route53Wrapper) DeleteNameserverRecordFromHostedZone(ctx context.Context, hostedZoneName string, nameservers []string) error {
 	return nil
 }

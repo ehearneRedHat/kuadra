@@ -27,10 +27,12 @@ type IamWrapper interface {
 type Route53Wrapper interface {
 	// Checks to see if domain exists.
 	IsExistingDomain(ctx context.Context, domain string) (bool, error)
-	// Gives us the delegation set after creation of hosted zone, which contains the nameserver entries to add to a domain.
-	CreateHostedZone(ctx context.Context, name string, isPublicHostedZone bool) error
+	// Creates a Hosted Zone.
+	CreateHostedZone(ctx context.Context, name string, isPrivateHostedZone bool) error
+	// Also creates a Hosted Zone, but also attaches its nameserver records to the given root domain.
+	CreateHostedZoneRootDomain(ctx context.Context, name string, rootDomain string, isPrivateHostedZone bool) error
 	// Adds the nameservers to the root domain if root domain exists for given subdomain.
-	AddNameserverRecordsToDomain(ctx context.Context, nameservers []string) error
+	AddNameserverRecordsToDomain(ctx context.Context, domain string, nameservers []string) error
 	// Get Delegation Set for given hosted zone.
 	GetDelegationSet(ctx context.Context, hostedZoneName string) (route53Types.DelegationSet, error)
 	// Lists the nameservers for a given hosted zone.
