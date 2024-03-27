@@ -99,6 +99,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	route53Wrapper, err := aws.NewRoute53Wrapper()
+	if err != nil {
+		setupLog.Error(err, "couldn't load AWS configuration")
+		os.Exit(1)
+	}
+
 	// Creating controllers
 
 	if err = (&controller.AwsAccountReconciler{
@@ -119,8 +125,9 @@ func main() {
 	}
 
 	if err = (&controller.Route53Reconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Client:         mgr.GetClient(),
+		Scheme:         mgr.GetScheme(),
+		Route53Wrapper: *route53Wrapper,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Route53")
 		os.Exit(1)
