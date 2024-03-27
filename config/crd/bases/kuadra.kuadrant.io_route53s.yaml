@@ -1,0 +1,65 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.13.0
+  name: route53s.kuadra.kuadrant.io
+spec:
+  group: kuadra.kuadrant.io
+  names:
+    kind: Route53
+    listKind: Route53List
+    plural: route53s
+    singular: route53
+  scope: Namespaced
+  versions:
+  - name: v1
+    schema:
+      openAPIV3Schema:
+        description: Route53 is the Schema for the route53s API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: Route53Spec defines the desired state of Route53
+            properties:
+              domainName:
+                description: 'There are two fields required to generate an AWS Route
+                  53 Hosted Zone - #1 the domain name (string), and #2 the type of
+                  hosted zone (boolean), either public (true) or private (false).
+                  Important: Run "make" to regenerate code after modifying this file'
+                type: string
+              isPrivateHostedZone:
+                type: boolean
+              rootDomainName:
+                type: string
+            required:
+            - domainName
+            - isPrivateHostedZone
+            type: object
+          status:
+            description: Route53Status defines the observed state of Route53
+            properties:
+              hostedZoneCreated:
+                type: boolean
+              nameserverRecords:
+                items:
+                  type: string
+                type: array
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

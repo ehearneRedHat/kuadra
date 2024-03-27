@@ -57,6 +57,32 @@ rules:
 - apiGroups:
   - kuadra.kuadrant.io
   resources:
+  - route53s
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kuadra.kuadrant.io
+  resources:
+  - route53s/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - kuadra.kuadrant.io
+  resources:
+  - route53s/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - kuadra.kuadrant.io
+  resources:
   - users
   verbs:
   - create
