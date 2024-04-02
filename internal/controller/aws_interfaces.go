@@ -32,7 +32,7 @@ type Route53Wrapper interface {
 	// Also creates a Hosted Zone, but also attaches its nameserver records to the given root domain.
 	CreateHostedZoneRootDomain(ctx context.Context, name string, rootDomain string, isPrivateHostedZone bool) error
 	// Adds the nameservers to the root domain if root domain exists for given subdomain.
-	AddNameserverRecordsToDomain(ctx context.Context, domain string, nameservers []string) error
+	AddNameserverRecordsToDomain(ctx context.Context, domain string, recordName string, nameservers []string) error
 	// Get Delegation Set for given hosted zone.
 	GetDelegationSet(ctx context.Context, hostedZoneName string) (route53Types.DelegationSet, error)
 	// Lists the nameservers for a given hosted zone.
