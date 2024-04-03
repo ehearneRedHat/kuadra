@@ -37,8 +37,10 @@ type Route53Wrapper interface {
 	GetDelegationSet(ctx context.Context, hostedZoneName string) (route53Types.DelegationSet, error)
 	// Lists the nameservers for a given hosted zone.
 	ListNameservers(ctx context.Context, hostedZoneName string) ([]string, error)
+	// Gets the id of a hosted zone
+	GetHostedZoneId(ctx context.Context, hostedZoneName string) (string, error)
 	// Deletes the hosted zone by domain name.
 	DeleteHostedZone(ctx context.Context, hostedZoneName string) error
 	// Deletes the nameserver record of the hosted zone.
-	DeleteNameserverRecordFromHostedZone(ctx context.Context, hostedZoneName string, nameservers []string) error
+	DeleteNameserverRecordFromHostedZone(ctx context.Context, hostedZoneName string, recordName string) error
 }
