@@ -57,27 +57,45 @@ func (r *Route53Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 	if err != nil {
 		log.Error(err, "error getting route53 CR")
+		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
+
+	// Delete Hosted Zone
+	if route53.DeletionTimestamp != nil && !route53.DeletionTimestamp.IsZero() {
+		var err error
+		if err = r.Route53Wrapper.DeleteHostedZone(ctx, route53.Spec.DomainName); err != nil {
+			log.Error(err, "failed to delete hosted zone", "hostedZone", route53.Spec.DomainName)
+			return ctrl.Result{}, err
+		}
+		// if root domain was specified in the CR sample...
+		if route53.Spec.RootDomainName != "" {
+			if err = r.Route53Wrapper.DeleteNameserverRecordFromHostedZone(ctx, route53.Spec.RootDomainName, route53.Spec.DomainName); err != nil {
+				log.Error(err, "failed to delete nameserver record", "nameserverRecord", route53.Spec.DomainName)
+			}
+		}
+		return ctrl.Result{}, nil
+	}
+
 	// Create Hosted Zone
 	if !route53.Status.HostedZoneCreated {
 		var err error
 		// if root domain was specified in the CR sample...
 		if route53.Spec.RootDomainName != "" {
-			err = r.Route53Wrapper.CreateHostedZoneRootDomain(ctx, route53.Spec.DomainName, route53.Spec.RootDomainName, route53.Spec.IsPrivateHostedZone)
+			if err = r.Route53Wrapper.CreateHostedZoneRootDomain(ctx, route53.Spec.DomainName, route53.Spec.RootDomainName, route53.Spec.IsPrivateHostedZone); err != nil {
+				log.Error(err, "unable to create hosted zone")
+				return ctrl.Result{}, err
+			}
 		} else { // if root domain was not specified in the CR sample...
-			err = r.Route53Wrapper.CreateHostedZone(ctx, route53.Spec.DomainName, route53.Spec.IsPrivateHostedZone)
-		}
-		// If there were issues creating the hosted zone...
-		if err != nil {
-			log.Error(err, "unable to create hosted zone")
-			return ctrl.Result{}, err
+			if err = r.Route53Wrapper.CreateHostedZone(ctx, route53.Spec.DomainName, route53.Spec.IsPrivateHostedZone); err != nil {
+				log.Error(err, "unable to create hosted zone")
+				return ctrl.Result{}, err
+			}
 		}
 		// Log the creation of the Hosted Zone
 		log.V(1).Info("created hosted zone", "domainName", route53.Spec.DomainName)
 		// Mark the hosted zone as created in the spec
 		route53.Status.HostedZoneCreated = true
 	}
-	// Delete Hosted Zone
 
 	return ctrl.Result{}, nil
 }
