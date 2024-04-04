@@ -22,6 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	kuadrav1 "github.com/Kuadrant/kuadra/api/v1"
@@ -33,6 +34,9 @@ type Route53Reconciler struct {
 	Scheme         *runtime.Scheme
 	Route53Wrapper Route53Wrapper
 }
+
+// Create finalizer for deletion purposes
+const Route53Finalizer = "kuadra.kuadrant.io/route53"
 
 //+kubebuilder:rbac:groups=kuadra.kuadrant.io,resources=route53s,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=kuadra.kuadrant.io,resources=route53s/status,verbs=get;update;patch
@@ -53,27 +57,42 @@ func (r *Route53Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	var route53 kuadrav1.Route53
 
 	// Pull in the CR sample to perform CRUD actions against
-	err := r.Get(ctx, req.NamespacedName, &route53)
 
-	if err != nil {
-		log.Error(err, "error getting route53 CR")
+	if err := r.Get(ctx, req.NamespacedName, &route53); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
 	// Delete Hosted Zone
 	if route53.DeletionTimestamp != nil && !route53.DeletionTimestamp.IsZero() {
 		var err error
-		if err = r.Route53Wrapper.DeleteHostedZone(ctx, route53.Spec.DomainName); err != nil {
-			log.Error(err, "failed to delete hosted zone", "hostedZone", route53.Spec.DomainName)
-			return ctrl.Result{}, err
-		}
+
 		// if root domain was specified in the CR sample...
 		if route53.Spec.RootDomainName != "" {
 			if err = r.Route53Wrapper.DeleteNameserverRecordFromHostedZone(ctx, route53.Spec.RootDomainName, route53.Spec.DomainName); err != nil {
 				log.Error(err, "failed to delete nameserver record", "nameserverRecord", route53.Spec.DomainName)
 			}
+			log.V(1).Info("deleted nameserver record from root hosted zone", "rootDomainName", route53.Spec.RootDomainName)
+		}
+
+		if err = r.Route53Wrapper.DeleteHostedZone(ctx, route53.Spec.DomainName); err != nil {
+			log.Error(err, "failed to delete hosted zone", "hostedZone", route53.Spec.DomainName)
+			return ctrl.Result{}, err
+		}
+		log.V(1).Info("deleted hosted zone", "domainName", route53.Spec.DomainName)
+		// No need for finalizer since deleted
+		controllerutil.RemoveFinalizer(&route53, Route53Finalizer)
+		if err := r.Update(ctx, &route53); err != nil {
+			return ctrl.Result{}, err
 		}
 		return ctrl.Result{}, nil
+	}
+
+	// Add finalizer for deletion
+	if !controllerutil.ContainsFinalizer(&route53, Route53Finalizer) {
+		controllerutil.AddFinalizer(&route53, Route53Finalizer)
+		if err := r.Update(ctx, &route53); err != nil {
+			return ctrl.Result{}, err
+		}
 	}
 
 	// Create Hosted Zone

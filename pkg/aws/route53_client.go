@@ -373,20 +373,23 @@ func (route53Wrapper route53Wrapper) DeleteNameserverRecordFromHostedZone(ctx co
 
 	// Iterate through nameserver list, appending the nameserver to the list of resource records.
 	for _, a := range nameservers {
-		// Create value string
-		value := "<Value>" + a + "</Value>"
+		nameserver := a
 		// Create resource record
 		resourceRecord := types.ResourceRecord{
-			Value: &value,
+			Value: &nameserver,
 		}
 		resourceRecords = append(resourceRecords, resourceRecord)
 	}
+
+	// create value of 300 for ttl
+	ttl := int64(300)
 
 	// Create resource record set
 	resourceRecordSet := types.ResourceRecordSet{
 		Name:            &recordName,
 		Type:            "NS",
 		ResourceRecords: resourceRecords,
+		TTL:             &ttl,
 	}
 
 	// Create change
