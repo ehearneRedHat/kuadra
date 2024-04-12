@@ -59,6 +59,7 @@ func (r *Route53Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	// Pull in the CR sample to perform CRUD actions against
 
 	if err := r.Get(ctx, req.NamespacedName, &route53); err != nil {
+		log.Error(err, "error getting the route53 cr", "route53", route53)
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
