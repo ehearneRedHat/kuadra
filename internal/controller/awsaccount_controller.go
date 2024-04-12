@@ -106,7 +106,7 @@ func (r *AwsAccountReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 			log.Error(err, "unable to create namespace")
 			return ctrl.Result{}, err
 		}
-		log.V(1).Info("created namespace", "namespace", awsAccount.Spec.UserName)
+		log.Info("created namespace", "namespace", awsAccount.Spec.UserName)
 		awsAccount.Status.NamespaceCreated = true
 	}
 
@@ -115,7 +115,7 @@ func (r *AwsAccountReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 			log.Error(err, "unable to create IAM user")
 			return ctrl.Result{}, err
 		}
-		log.V(1).Info("created user", "userName", awsAccount.Spec.UserName)
+		log.Info("created user", "userName", awsAccount.Spec.UserName)
 		awsAccount.Status.UserCreated = true
 	}
 
@@ -143,7 +143,7 @@ func (r *AwsAccountReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 			log.Error(err, "unable to create login profile")
 			return ctrl.Result{}, err
 		}
-		log.V(1).Info("created login profile")
+		log.Info("created login profile")
 		awsAccount.Status.LoginProfileCreated = true
 	}
 
@@ -161,7 +161,7 @@ func (r *AwsAccountReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 			log.Error(err, "unable to create secret for AWS credentials")
 			return ctrl.Result{}, err
 		}
-		log.V(1).Info("created access key", "accessKeyId", accessKey.AccessKeyId)
+		log.Info("created access key", "accessKeyId", accessKey.AccessKeyId)
 		awsAccount.Status.AccessKeyCreated = true
 	}
 
@@ -171,7 +171,7 @@ func (r *AwsAccountReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 			log.Error(err, "unable to add user to group", "groupName", group)
 			return ctrl.Result{}, err
 		}
-		log.V(1).Info("Added user to group", "group name:", group)
+		log.Info("Added user to group", "group name:", group)
 		awsAccount.Status.UserGroups = append(awsAccount.Status.UserGroups, group)
 	}
 
@@ -181,7 +181,7 @@ func (r *AwsAccountReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 			log.Error(err, "unable to remove user from group", "groupName", group)
 			return ctrl.Result{}, err
 		}
-		log.V(1).Info("removed user from group", "groupName", group)
+		log.Info("removed user from group", "groupName", group)
 		awsAccount.Status.UserGroups = slice.Remove(awsAccount.Status.UserGroups, func(g string) bool { return g == group })
 	}
 

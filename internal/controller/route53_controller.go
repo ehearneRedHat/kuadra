@@ -71,14 +71,14 @@ func (r *Route53Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			if err = r.Route53Wrapper.DeleteNameserverRecordFromHostedZone(ctx, route53.Spec.RootDomainName, route53.Spec.DomainName); err != nil {
 				log.Error(err, "failed to delete nameserver record", "nameserverRecord", route53.Spec.DomainName)
 			}
-			log.V(1).Info("deleted nameserver record from root hosted zone", "rootDomainName", route53.Spec.RootDomainName)
+			log.Info("deleted nameserver record from root hosted zone", "rootDomainName", route53.Spec.RootDomainName)
 		}
 
 		if err = r.Route53Wrapper.DeleteHostedZone(ctx, route53.Spec.DomainName); err != nil {
 			log.Error(err, "failed to delete hosted zone", "hostedZone", route53.Spec.DomainName)
 			return ctrl.Result{}, err
 		}
-		log.V(1).Info("deleted hosted zone", "domainName", route53.Spec.DomainName)
+		log.Info("deleted hosted zone", "domainName", route53.Spec.DomainName)
 		// No need for finalizer since deleted
 		controllerutil.RemoveFinalizer(&route53, Route53Finalizer)
 		if err := r.Update(ctx, &route53); err != nil {
@@ -111,7 +111,7 @@ func (r *Route53Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			}
 		}
 		// Log the creation of the Hosted Zone
-		log.V(1).Info("created hosted zone", "domainName", route53.Spec.DomainName)
+		log.Info("created hosted zone", "domainName", route53.Spec.DomainName)
 		// Mark the hosted zone as created in the spec
 		route53.Status.HostedZoneCreated = true
 	}
