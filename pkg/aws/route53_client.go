@@ -32,7 +32,7 @@ func (route53Wrapper route53Wrapper) IsExistingDomain(ctx context.Context, domai
 	// Grab list of existing hosted zones
 	hostedZonesList, err := route53Wrapper.Route53Client.ListHostedZones(ctx, &route53.ListHostedZonesInput{})
 	if err != nil {
-		log.Printf("Failed to grab hosted zones from AWS. error: %v", err)
+		log.Printf("failed to grab hosted zones from AWS. error: %v", err)
 		return false, err
 	}
 	// Sort list of hosted zones to contain just the hosted zone name.
@@ -156,7 +156,7 @@ func (route53Wrapper route53Wrapper) CreateHostedZoneRootDomain(ctx context.Cont
 
 	// Check to see if err
 	if err != nil {
-		log.Printf("An error occurred while trying to add the nameserver records of %v to root hosted zone %v. error: %v", rootDomain, name, err)
+		log.Printf("an error occurred while trying to add the nameserver records of %v to root hosted zone %v. error: %v", rootDomain, name, err)
 		return err
 	}
 
@@ -175,7 +175,7 @@ func (route53Wrapper route53Wrapper) AddNameserverRecordsToDomain(ctx context.Co
 	}
 
 	if err != nil {
-		log.Printf("Unable to check if domain exists for adding nameserver - error: %v", err)
+		log.Printf("unable to check if domain exists for adding nameserver - error: %v", err)
 		return err
 	}
 
@@ -228,7 +228,7 @@ func (route53Wrapper route53Wrapper) AddNameserverRecordsToDomain(ctx context.Co
 	})
 
 	if err != nil {
-		log.Printf("Unable to change resource record sets for hosted zone %v. error: %v", domain, err)
+		log.Printf("unable to change resource record sets for hosted zone %v. error: %v", domain, err)
 		return err
 	}
 
@@ -256,7 +256,7 @@ func (route53Wrapper route53Wrapper) GetDelegationSet(ctx context.Context, hoste
 	// Grab list of existing hosted zones
 	hostedZonesList, err := route53Wrapper.Route53Client.ListHostedZones(ctx, &route53.ListHostedZonesInput{})
 	if err != nil {
-		log.Printf("Failed to grab hosted zones from AWS. error: %v", err)
+		log.Printf("failed to grab hosted zones from AWS. error: %v", err)
 		return types.DelegationSet{}, err
 	}
 	// Sort list of hosted zones to contain just the hosted zone name.
@@ -304,7 +304,7 @@ func (route53Wrapper route53Wrapper) ListNameservers(ctx context.Context, hosted
 	// check to see if error...
 
 	if err != nil {
-		log.Printf("Unable to retrieve delegation set to list the nameservers for %v. error: %v", hostedZoneName, err)
+		log.Printf("unable to retrieve delegation set to list the nameservers for %v. error: %v", hostedZoneName, err)
 		return []string{}, err
 	}
 
@@ -337,7 +337,7 @@ func (route53Wrapper route53Wrapper) DeleteHostedZone(ctx context.Context, hoste
 	id, err := route53Wrapper.GetHostedZoneId(ctx, hostedZoneName)
 
 	if err != nil {
-		log.Printf("An error occurred while trying the get the id of %v. error: %v", hostedZoneName, err)
+		log.Printf("an error occurred while trying the get the id of %v. error: %v", hostedZoneName, err)
 		return err
 	}
 
@@ -350,7 +350,7 @@ func (route53Wrapper route53Wrapper) DeleteHostedZone(ctx context.Context, hoste
 	_, err = route53Wrapper.Route53Client.DeleteHostedZone(ctx, &deleteHostedZoneInput)
 
 	if err != nil {
-		log.Printf("An error occurred while deleting the hosted zone %v. Here's the error: %v", hostedZoneName, err)
+		log.Printf("an error occurred while deleting the hosted zone %v. Here's the error: %v", hostedZoneName, err)
 		return err
 	}
 
@@ -451,7 +451,7 @@ func (route53Wrapper route53Wrapper) GetHostedZoneId(ctx context.Context, hosted
 	// Grab list of existing hosted zones
 	hostedZonesList, err := route53Wrapper.Route53Client.ListHostedZones(ctx, &route53.ListHostedZonesInput{})
 	if err != nil {
-		log.Printf("Failed to grab hosted zones from AWS. error: %v", err)
+		log.Printf("failed to grab hosted zones from AWS. error: %v", err)
 		return "", err
 	}
 
